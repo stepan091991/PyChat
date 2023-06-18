@@ -37,12 +37,22 @@ class App(customtkinter.CTk):
             if app.login_entry.get() == "":
                 self.info_text.configure(text="Имя пользователя не может быть пустым!")
                 self.info_text.place(x=217, y=385)
-            websocket.send(f"login|{app.login_entry.get()}|{app.registration_entry.get()}")
-        pass
+            elif self.if_spaces(app.login_entry.get()):
+                self.info_text.configure(text="Имя пользователя не может содержать пробелы и знаки(. | < >)!")
+                self.info_text.place(x=115, y=385)
+            else:
+                websocket.send(f"login|{app.login_entry.get()}|{app.registration_entry.get()}")
 
     def register_button_click(self):
         if websocket:
-            websocket.send(f"registration|{app.login_entry.get()}|{app.registration_entry.get()}")
+            if app.login_entry.get() == "":
+                self.info_text.configure(text="Имя пользователя не может быть пустым!")
+                self.info_text.place(x=217, y=385)
+            elif self.if_spaces(app.login_entry.get()):
+                self.info_text.configure(text="Имя пользователя не может содержать пробелы и знаки(. | < >)!")
+                self.info_text.place(x=115, y=385)
+            else:
+                websocket.send(f"registration|{app.login_entry.get()}|{app.registration_entry.get()}")
 
     def hello(self):
         global websocket
@@ -81,5 +91,11 @@ class App(customtkinter.CTk):
         if websocket:
             websocket.close()
             self.destroy()
+
+    def if_spaces(self,text):
+        for c in text:
+            if c == " " or c == "|" or c == "." or c == "<" or c == ">":
+                return True
+        return False
 app = App()
 app.mainloop()
