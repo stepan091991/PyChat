@@ -14,8 +14,8 @@ class App(customtkinter.CTk):
         self.title("PyChat by Stepan4ek")
         self.resizable(width=False, height=False)
         self.protocol('WM_DELETE_WINDOW', self.on_close)
+        #Окно меню регистрации и входа
         self.logo_image = customtkinter.CTkImage(light_image=Image.open("logo.png"),size=(193, 58))
-        # add widgets to app
         self.checkbox_frame = customtkinter.CTkFrame(self)
         self.checkbox_frame.place(x=215,y=180)
         self.login_entry = customtkinter.CTkEntry(self.checkbox_frame, placeholder_text="Логин")
@@ -32,6 +32,13 @@ class App(customtkinter.CTk):
         self.info_text.place(x=217, y=385)
         self.logo_text = customtkinter.CTkLabel(self, text="", fg_color="transparent", anchor="center",image=self.logo_image)
         self.logo_text.place(x=207, y=100)
+        self.info_menu_button = customtkinter.CTkButton(self, text="Информация", command=self.info_menu_button_event)
+        self.info_menu_button.place(x=10, y=10)
+        #Окно меню информации
+        self.info_menu_frame = customtkinter.CTkFrame(self,width=580,height=450)
+        self.info_menu_frame.place(x=-1000, y=10)
+        self.menu_info_text = customtkinter.CTkLabel(self.info_menu_frame, text="Информация о программе:\nПрограмма полностью написана на python\nПередача данных и сообщений сделана на WebSocket\nПрограмма находится в процессе разработки\nПрограмма была написана в одиночку\nАвтор программы Stepan4ek", fg_color="transparent", anchor="s",justify="left",font=("",17))
+        self.menu_info_text.place(x=10, y=10)
         Thread(target=self.hello).start()
     # add methods to app
     def login_button_click(self):
@@ -49,6 +56,7 @@ class App(customtkinter.CTk):
                 websocket.send(f"login|{app.login_entry.get()}|{app.registration_entry.get()}")
 
     def register_button_click(self):
+        self.close_reglog_menu()
         if websocket:
             if app.login_entry.get() == "":
                 self.info_text.configure(text="Имя пользователя не может быть пустым!")
@@ -64,6 +72,11 @@ class App(customtkinter.CTk):
                 self.info_text.place(x=197, y=385)
             else:
                 websocket.send(f"registration|{app.login_entry.get()}|{app.registration_entry.get()}")
+
+    def info_menu_button_event(self):
+        self.close_reglog_menu()
+        self.open_info_menu()
+        pass
 
     def hello(self):
         global websocket
@@ -113,5 +126,22 @@ class App(customtkinter.CTk):
             if c == "|":
                 return True
         return False
+
+    def close_reglog_menu(self):
+        self.checkbox_frame.place(x=-215, y=180)
+        self.logo_text.place(x=-207, y=100)
+        self.info_text.place(x=-115, y=385)
+
+    def open_reglog_menu(self):
+        self.checkbox_frame.place(x=215, y=180)
+        self.logo_text.place(x=207, y=100)
+        self.info_text.place(x=115, y=385)
+
+    def open_info_menu(self):
+        self.info_menu_frame.place(x=10, y=10)
+
+    def close_info_menu(self):
+        self.info_menu_frame.place(x=-1000, y=10)
+
 app = App()
 app.mainloop()
