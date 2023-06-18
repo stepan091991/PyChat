@@ -3,6 +3,7 @@ import asyncio
 import websockets
 from websockets.server import serve
 import data_base
+#message|name|public or private|receiver_name|message_text
 connected = set()
 async def echo(websocket):
     connected.add(websocket)
