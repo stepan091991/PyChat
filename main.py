@@ -26,7 +26,7 @@ class App(customtkinter.CTk):
         self.login_button.grid(row=2, column=0, padx=20, pady=11)
         self.registration_button = customtkinter.CTkButton(self.checkbox_frame, command=self.register_button_click,text="Регистрация")
         self.registration_button.grid(row=3, column=0, padx=20, pady=11)
-        self.version_text = customtkinter.CTkLabel(self, text="Version Beta 0.0.1", fg_color="transparent",state="disabled")
+        self.version_text = customtkinter.CTkLabel(self, text="Version: beta 0.0.1", fg_color="transparent",state="disabled")
         self.version_text.place(x=7, y=475)
         self.info_text = customtkinter.CTkLabel(self, text="", fg_color="transparent",anchor="center")
         self.info_text.place(x=217, y=385)
@@ -35,9 +35,9 @@ class App(customtkinter.CTk):
         self.info_menu_button = customtkinter.CTkButton(self, text="Информация", command=self.info_menu_button_event)
         self.info_menu_button.place(x=10, y=10)
         #Окно меню информации
-        self.info_menu_frame = customtkinter.CTkFrame(self,width=580,height=450)
+        self.info_menu_frame = customtkinter.CTkFrame(self,width=580,height=410)
         self.info_menu_frame.place(x=-1000, y=10)
-        self.menu_info_text = customtkinter.CTkLabel(self.info_menu_frame, text="Информация о программе:\nПрограмма полностью написана на python\nПередача данных и сообщений сделана на WebSocket\nПрограмма находится в процессе разработки\nПрограмма была написана в одиночку\nАвтор программы Stepan4ek", fg_color="transparent", anchor="s",justify="left",font=("",17))
+        self.menu_info_text = customtkinter.CTkLabel(self.info_menu_frame, text="Информация о программе:\nПрограмма полностью написана на python\nПередача данных и сообщений сделана на WebSocket\nПрограмма находится в процессе разработки\nПрограмма была написана в одиночку\nАвтор программы Stepan4ek\n\nЛицензия:\nПроект полность открытый, код доступен для всех, пожалуйста не \nворуйте и не выдавайте себя за его автора.\nЕсли вы хотите помочь в развитии проекта пишите в дискорд, \nник stepan4ek", fg_color="transparent", anchor="s",justify="left",font=("",17))
         self.menu_info_text.place(x=10, y=10)
         Thread(target=self.hello).start()
     # add methods to app
@@ -74,9 +74,14 @@ class App(customtkinter.CTk):
                 websocket.send(f"registration|{app.login_entry.get()}|{app.registration_entry.get()}")
 
     def info_menu_button_event(self):
-        self.close_reglog_menu()
-        self.open_info_menu()
-        pass
+        if self.info_menu_button.cget("text") == "Информация":
+            self.info_menu_button.configure(text="Назад")
+            self.close_reglog_menu()
+            self.open_info_menu()
+        elif self.info_menu_button.cget("text") == "Назад":
+            self.info_menu_button.configure(text="Информация")
+            self.open_reglog_menu()
+            self.close_info_menu()
 
     def hello(self):
         global websocket
@@ -108,6 +113,10 @@ class App(customtkinter.CTk):
             print("Сервер не доступен!")
             self.info_text.configure(text="Сервер не доступен!")
             self.info_text.place(x=242, y=385)
+            self.registration_button.configure(state="disabled")
+            self.login_button.configure(state="disabled")
+            self.registration_entry.configure(state="disabled")
+            self.login_entry.configure(state="disabled")
         except websockets.ConnectionClosedOK:
             print("Соединение успешно закрыто!")
 
@@ -129,16 +138,16 @@ class App(customtkinter.CTk):
 
     def close_reglog_menu(self):
         self.checkbox_frame.place(x=-215, y=180)
-        self.logo_text.place(x=-207, y=100)
-        self.info_text.place(x=-115, y=385)
+        self.logo_text.place(x=-2207, y=100)
+        self.info_text.place(x=-2115, y=385)
 
     def open_reglog_menu(self):
         self.checkbox_frame.place(x=215, y=180)
         self.logo_text.place(x=207, y=100)
-        self.info_text.place(x=115, y=385)
+        self.info_text.place(x=242, y=385)
 
     def open_info_menu(self):
-        self.info_menu_frame.place(x=10, y=10)
+        self.info_menu_frame.place(x=10, y=50)
 
     def close_info_menu(self):
         self.info_menu_frame.place(x=-1000, y=10)
