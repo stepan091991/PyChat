@@ -20,13 +20,18 @@ class App(customtkinter.CTk):
         self.message_send_button.place(x=485, y=445)
         self.coint = 0
         self.messages = []
+        self.chats = []
+        for i in range(10):
+            name = i
+            self.chat = customtkinter.CTkButton(self.chats_frame, text=str(i+1),command=lambda idx = i: self.click3(idx))
+            self.chat.grid(row=i, column=0, padx=0, pady=(10, 0), sticky="w")
+            self.chats.append(self.chat)
+    def click3(self,idx):
+        print(self.chats[idx].cget("text"))
     def new_message(self):
         message = customtkinter.CTkLabel(self.messsages_frame, text=f"<Stepan4ek>\n{textwrap.fill(app.message_entry.get(), 40)}",fg_color="#3b3b3b",width=40,height=40,corner_radius=7,justify="left")
         message.grid(row=self.coint, column=1, padx=10, pady=(10, 0), sticky="w")
-        message1 = customtkinter.CTkLabel(self.messsages_frame,text=f"<Stepan4ek>\n{textwrap.fill(app.message_entry.get(), 40)}",fg_color="#3b3b3b", width=40, height=40, corner_radius=7, justify="left")
-        message1.grid(row=self.coint+1, column=2, padx=10, pady=(10, 0), sticky="w")
         self.messages.append(message)
-        self.messages.append(message1)
         self.coint += 1
 
 app = App()

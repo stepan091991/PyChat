@@ -1,5 +1,5 @@
 import textwrap
-
+import rsa
 import customtkinter
 import asyncio
 import string
@@ -9,6 +9,8 @@ from websockets.sync.client import connect
 from threading import Thread
 customtkinter.set_appearance_mode("dark")
 websocket = None
+server_pub_key = None
+(my_pub_key, my_priv_key) = rsa.newkeys(512)
 #Класс приложения
 class App(customtkinter.CTk):
     def __init__(self):
@@ -79,7 +81,7 @@ class App(customtkinter.CTk):
                 self.info_text.configure(text="Имя пользователя не может содержать пробелы и знаки(. | < >)!")
                 self.info_text.place(x=115, y=385)
             else:
-                websocket.send(f"login|{app.login_entry.get()}|{app.registration_entry.get()}")
+                websocket.send(self.encript(f"login|{app.login_entry.get()}|{app.registration_entry.get()}"))
     #Событие при нажатии на регистрацию
     def register_button_click(self):
         if websocket:
@@ -96,7 +98,7 @@ class App(customtkinter.CTk):
                 self.info_text.configure(text="Пароль не может содержать знак |!")
                 self.info_text.place(x=197, y=385)
             else:
-                websocket.send(f"registration|{app.login_entry.get()}|{app.registration_entry.get()}")
+                websocket.send(self.encript(f"registration|{app.login_entry.get()}|{app.registration_entry.get()}"))
     #Событие при нажатии на информацию
     def info_menu_button_event(self):
         if self.info_menu_button.cget("text") == "Информация":
@@ -114,39 +116,46 @@ class App(customtkinter.CTk):
         self.messages.append(message)
         self.message_coint += 1
     def send_new_message(self):
-        websocket.send(f"message|{self.myname}|public|all|{app.message_entry.get()}")
+        websocket.send(self.encript(f"message|{self.myname}|public|all|{app.message_entry.get()}"))
         pass
     #Функция обмена данными
     def hello(self):
-        global websocket
+        global websocket,server_pub_key
         try:
             with connect("ws://localhost:8765") as websocket:
+                websocket.send(f"key|{my_pub_key.n}|{my_pub_key.e}")
                 while True:
                     message = websocket.recv()
-                    print(f"Received: {message}")
-                    data = message.split("|")
-                    if data[0] == "login_info":
-                        if data[1] == "yes":
-                            self.myname = app.login_entry.get()
-                            self.open_chat()
-                            pass
-                        elif data[1] == "no":
-                            if data[2] == "no_user":
-                                self.info_text.configure(text="Неизвестный пользователь!")
-                                self.info_text.place(x=217, y=385)
-                            elif data[2] == "incorrect_password":
-                                self.info_text.configure(text="Неверный пароль!")
-                                self.info_text.place(x=242, y=385)
-                    if data[0] == "registration_info":
-                        if data[1] == "yes":
-                            pass
-                        elif data[1] == "no":
-                            if data[2] == "user_already_exits":
-                                self.info_text.configure(text="Имя пользователя уже занято!")
-                                self.info_text.place(x=211, y=385)
+                    print(f"Получено зашифрованое сообщение: {message}")
+                    try:
+                        if message.split("|",1)[0] == "key":
+                            server_pub_key = rsa.PublicKey(int(message.split("|")[1]),int(message.split("|")[2]))
+                    except TypeError as err:
+                        data_decript = rsa.decrypt(message, my_priv_key)
+                        print(f"Сообщение расшифровано: {data_decript.decode('utf8')}")
+                        data = data_decript.decode("utf8").split("|")
+                        if data[0] == "login_info":
+                            if data[1] == "yes":
+                                self.myname = app.login_entry.get()
+                                self.open_chat()
                                 pass
-                    if data[0] == "message":
-                        self.new_message(data[1],data[4])
+                            elif data[1] == "no":
+                                if data[2] == "no_user":
+                                    self.info_text.configure(text="Неизвестный пользователь!")
+                                    self.info_text.place(x=217, y=385)
+                                elif data[2] == "incorrect_password":
+                                    self.info_text.configure(text="Неверный пароль!")
+                                    self.info_text.place(x=242, y=385)
+                        if data[0] == "registration_info":
+                            if data[1] == "yes":
+                                pass
+                            elif data[1] == "no":
+                                if data[2] == "user_already_exits":
+                                    self.info_text.configure(text="Имя пользователя уже занято!")
+                                    self.info_text.place(x=211, y=385)
+                                    pass
+                        if data[0] == "message":
+                            self.new_message(data[1],data[4])
         except ConnectionRefusedError:
             print("Сервер не доступен!")
             self.info_text.configure(text="Сервер не доступен!")
@@ -174,6 +183,8 @@ class App(customtkinter.CTk):
             if c == "|":
                 return True
         return False
+    def encript(self,text):
+        return rsa.encrypt(text.encode("utf8"), server_pub_key)
     #функция закрытия меню регистрации и входа
     def close_reglog_menu(self):
         self.checkbox_frame.place(x=-215, y=180)
