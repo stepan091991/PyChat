@@ -10,7 +10,7 @@ from threading import Thread
 customtkinter.set_appearance_mode("dark")
 websocket = None
 server_pub_key = None
-(my_pub_key, my_priv_key) = rsa.newkeys(512)
+(my_pub_key, my_priv_key) = rsa.newkeys(2048)
 #Класс приложения
 class App(customtkinter.CTk):
     def __init__(self):
@@ -20,13 +20,15 @@ class App(customtkinter.CTk):
         self.resizable(width=False, height=False)
         self.protocol('WM_DELETE_WINDOW', self.on_close)
         self.myname = ""
+        self.messages_list = ()
+        self.selected_chat = ""
         #Окно меню регистрации и входа
         self.logo_image = customtkinter.CTkImage(light_image=Image.open("logo.png"),size=(193, 58))
         self.checkbox_frame = customtkinter.CTkFrame(self)
         self.checkbox_frame.place(x=215,y=180)
         self.login_entry = customtkinter.CTkEntry(self.checkbox_frame, placeholder_text="Логин")
         self.login_entry.grid(row=0, column=0, padx=20, pady=11)
-        self.registration_entry = customtkinter.CTkEntry(self.checkbox_frame, placeholder_text="Пароль")
+        self.registration_entry = customtkinter.CTkEntry(self.checkbox_frame, placeholder_text="Пароль",show='*')
         self.registration_entry.grid(row=1, column=0, padx=20, pady=11)
         self.login_button = customtkinter.CTkButton(self.checkbox_frame, command=self.login_button_click,text="Вход")
         self.login_button.grid(row=2, column=0, padx=20, pady=11)
@@ -41,10 +43,16 @@ class App(customtkinter.CTk):
         self.info_menu_button = customtkinter.CTkButton(self, text="Информация", command=self.info_menu_button_event)
         self.info_menu_button.place(x=10, y=10)
         #Окно меню информации
-        self.info_menu_frame = customtkinter.CTkFrame(self,width=580,height=410)
-        self.info_menu_frame.place(x=-1000, y=10)
-        self.menu_info_text = customtkinter.CTkLabel(self.info_menu_frame, text="Информация о программе:\nПрограмма полностью написана на python\nПередача данных и сообщений сделана на WebSocket\nПрограмма находится в процессе разработки\nПрограмма была написана в одиночку\nАвтор программы Stepan4ek\n\nЛицензия:\nПроект полность открытый, код доступен для всех, пожалуйста не \nворуйте и не выдавайте себя за его автора.\nЕсли вы хотите помочь в развитии проекта пишите в дискорд, \nник stepan4ek", fg_color="transparent", anchor="s",justify="left",font=("",17))
+        self.info_menu_all_frame = customtkinter.CTkFrame(self, width=600, height=400,fg_color="transparent",border_width=0)
+        self.info_menu_all_frame.place(x=-1000, y=10)
+        self.info_menu_frame = customtkinter.CTkFrame(self.info_menu_all_frame,width=550,height=135)
+        self.info_menu_frame.place(x=10, y=0)
+        self.menu_info_text = customtkinter.CTkLabel(self.info_menu_frame, text="Информация о программе:\nПрограмма полностью написана на python\nПередача данных и сообщений сделана на WebSocket\nПрограмма находится в процессе разработки\nПрограмма была написана в одиночку\nАвтор программы Stepan4ek", fg_color="transparent", anchor="s",justify="left",font=("",17))
         self.menu_info_text.place(x=10, y=10)
+        self.info_menu_frame1 = customtkinter.CTkScrollableFrame(self.info_menu_all_frame,width=550,height=135)
+        self.info_menu_frame1.place(x=10, y=143)
+        self.menu_info_text1 = customtkinter.CTkLabel(self.info_menu_frame1, text="Дополнительная информация\n――――――――――――――――――――――――――――――――――――――――――――――――――――――\nЛицензия:\nПроект полность открытый, код доступен для всех, пожалуйста не \nворуйте и не выдавайте себя за его автора.\nЕсли вы хотите помочь в развитии проекта пишите в дискорд, \nник stepan4ek\n――――――――――――――――――――――――――――――――――――――――――――――――――――――\nШифровние:\nВсе данные шифруются с помощью асиметричного шифрования,\nМодуль шифрования python: rsa", fg_color="transparent", anchor="s",justify="left",font=("",17))
+        self.menu_info_text1.grid(row=0, column=0, padx=0, pady=(10, 20), sticky="w")
         #Окно меню чата
         self.chat_menu_frame = customtkinter.CTkFrame(self, width=610, height=480,fg_color="transparent",border_width=0)
         self.chat_menu_frame.place(x=-1000, y=0)
@@ -110,19 +118,29 @@ class App(customtkinter.CTk):
             self.open_reglog_menu()
             self.close_info_menu()
     #Срабатывает при получении сообщения
-    def new_message(self,name,message):
-        message = customtkinter.CTkLabel(self.messsages_frame,text=f"<{name}>\n{textwrap.fill(message, 40)}",fg_color="#3b3b3b", width=40, height=40, corner_radius=7, justify="left")
-        message.grid(row=self.message_coint, column=1, padx=10, pady=(10, 0), sticky="w")
+    def new_message(self,name,message,to,access):
+        if name == self.myname:
+            message = customtkinter.CTkLabel(self.messsages_frame, text=f"<{name}>\n{textwrap.fill(message, 40)}",fg_color="#5d5d5d", width=40, height=40, corner_radius=7, justify="left")
+            message.grid(row=self.message_coint, column=1, padx=10, pady=(10, 0), sticky="w")
+        else:
+            message = customtkinter.CTkLabel(self.messsages_frame, text=f"<{name}>\n{textwrap.fill(message, 40)}",fg_color="#3b3b3b", width=40, height=40, corner_radius=7, justify="left")
+            message.grid(row=self.message_coint, column=1, padx=10, pady=(10, 0), sticky="w")
         self.messages.append(message)
         self.message_coint += 1
+    def select_chat(self,idx):
+        print(self.messages[idx].cget("text"))
     def send_new_message(self):
-        websocket.send(self.encript(f"message|{self.myname}|public|all|{app.message_entry.get()}"))
+        if len(app.message_entry.get()) > 200:
+            print("Слишком большое сообщение!")
+            pass
+        else:
+            websocket.send(self.encript(f"message|{self.myname}|public|all|{app.message_entry.get()}"))
         pass
     #Функция обмена данными
     def hello(self):
         global websocket,server_pub_key
         try:
-            with connect("ws://localhost:8765") as websocket:
+            with connect("ws://stepan4ek.servegame.com:8765") as websocket:
                 websocket.send(f"key|{my_pub_key.n}|{my_pub_key.e}")
                 while True:
                     message = websocket.recv()
@@ -155,7 +173,7 @@ class App(customtkinter.CTk):
                                     self.info_text.place(x=211, y=385)
                                     pass
                         if data[0] == "message":
-                            self.new_message(data[1],data[4])
+                            self.new_message(data[1],data[4],data[3],data[2])
         except ConnectionRefusedError:
             print("Сервер не доступен!")
             self.info_text.configure(text="Сервер не доступен!")
@@ -197,10 +215,10 @@ class App(customtkinter.CTk):
         self.info_text.place(x=self.info_text.winfo_x()-1000, y=385)
     #функция открытия меню информации
     def open_info_menu(self):
-        self.info_menu_frame.place(x=10, y=50)
+        self.info_menu_all_frame.place(x=10, y=50)
     #функция закрытия меню информации
     def close_info_menu(self):
-        self.info_menu_frame.place(x=-1000, y=10)
+        self.info_menu_all_frame.place(x=-1000, y=10)
     def open_chat(self):
         self.chat_menu_frame.place(x=0, y=0)
 app = App()

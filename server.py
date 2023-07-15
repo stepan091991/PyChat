@@ -4,7 +4,7 @@ import websockets
 from websockets.server import serve
 import data_base
 #message|name|public or private|receiver_name|message_text
-(my_pub_key, my_priv_key) = rsa.newkeys(512)
+(my_pub_key, my_priv_key) = rsa.newkeys(2048)
 print(my_pub_key)
 client_pub_key = None
 connected = set()
@@ -44,7 +44,7 @@ async def echo(websocket):
         connected.remove(websocket)
         client_keys.pop(websocket)
 async def main():
-    async with serve(echo, "localhost", 8765):
+    async with serve(echo, "192.168.0.102", 8765):
         await asyncio.Future()  # run forever
 
 asyncio.run(main())
