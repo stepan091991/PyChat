@@ -2,7 +2,8 @@ import asyncio
 import rsa
 import websockets
 from websockets.server import serve
-import data_base
+from server import data_base
+
 #message|name|public or private|receiver_name|message_text
 (my_pub_key, my_priv_key) = rsa.newkeys(2048)
 print(my_pub_key)
@@ -26,10 +27,10 @@ async def echo(websocket):
                 print(f"Сообщение расшифровано:{data_decript.decode('utf8')}")
                 data = data_decript.decode("utf8").split("|")
                 if data[0] == "registration":
-                    await websocket.send(encript(data_base.registration(data[1],data[2]),websocket))
+                    await websocket.send(encript(data_base.registration(data[1], data[2]), websocket))
                 elif data[0] == "login":
-                    await websocket.send(encript(data_base.login(data[1],data[2]),websocket))
-                    if data_base.login(data[1],data[2]) == "login_info|yes|none":
+                    await websocket.send(encript(data_base.login(data[1], data[2]), websocket))
+                    if data_base.login(data[1], data[2]) == "login_info|yes|none":
                         users.update({websocket: data[1]})
                 elif data[0] == "message":
                     if data[2] == "public":

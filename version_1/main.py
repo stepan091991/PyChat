@@ -23,7 +23,7 @@ class App(customtkinter.CTk):
         self.messages_list = ()
         self.selected_chat = ""
         #Окно меню регистрации и входа
-        self.logo_image = customtkinter.CTkImage(light_image=Image.open("logo.png"),size=(193, 58))
+        self.logo_image = customtkinter.CTkImage(light_image=Image.open("logo.png"), size=(193, 58))
         self.checkbox_frame = customtkinter.CTkFrame(self)
         self.checkbox_frame.place(x=215,y=180)
         self.login_entry = customtkinter.CTkEntry(self.checkbox_frame, placeholder_text="Логин")
@@ -109,6 +109,7 @@ class App(customtkinter.CTk):
                 websocket.send(self.encript(f"registration|{app.login_entry.get()}|{app.registration_entry.get()}"))
     #Событие при нажатии на информацию
     def info_menu_button_event(self):
+        self.open_chat()
         if self.info_menu_button.cget("text") == "Информация":
             self.info_menu_button.configure(text="Назад")
             self.close_reglog_menu()
@@ -135,6 +136,7 @@ class App(customtkinter.CTk):
             pass
         else:
             websocket.send(self.encript(f"message|{self.myname}|public|all|{app.message_entry.get()}"))
+            app.message_entry.delete(0, last_index=None)
         pass
     #Функция обмена данными
     def hello(self):
@@ -166,6 +168,8 @@ class App(customtkinter.CTk):
                                     self.info_text.place(x=242, y=385)
                         if data[0] == "registration_info":
                             if data[1] == "yes":
+                                self.info_text.configure(text="Успешная регистрация!")
+                                self.info_text.place(x=211, y=385)
                                 pass
                             elif data[1] == "no":
                                 if data[2] == "user_already_exits":
